@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+	<link rel="stylesheet" href="./bootstrap/css/bootstrap.css">
+	<link rel="stylesheet" href="./css/base.css">
+	<link rel="stylesheet" href="./css/nprogress.css">
+	
+	<style>
+		.crumbs {
+			font-size: 14px;
+			color: #ccc;
+		}
+
+		.content .item {
+			margin-top: 10px;
+			margin-bottom: 10px;
+		}
+
+		.content .item img {
+			width: 100%;
+			height: 100%;
+			box-shadow: 0px 0px 10px #ccc;
+
+		}
+
+		.content .item .title:hover {
+			text-decoration: underline;
+			cursor: pointer;
+		}
+
+
+		.content .item div:first-child:hover img {
+			opacity: 0.7;
+			cursor: pointer;
+			transition: all 0.3s ease-in-out;
+		}
+
+		.content .item .intro {
+			margin-top: 10px;
+			color: #ccc;
+			font-size: 14px;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="container">
+		<nav class="navbar navbar-default">
+			<div class="container-fluid">
+				<!-- Brand and toggle get grouped for better mobile display -->
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+						data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="#" style="display:flex;">
+						小静的博客
+					</a>
+				</div>
+
+				<!-- Collect the nav links, forms, and other content for toggling -->
+				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+
+					<ul class="nav navbar-nav navbar-right">
+						<li><a href="#">首页</a></li>
+						<li class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+								aria-haspopup="true" aria-expanded="false">分类 <span class="caret"></span></a>
+							<ul class="dropdown-menu" id="wrapCate">
+								
+							</ul>
+						</li>
+						<li><a href="/tags.html">标签</a></li>
+						<li><a href="/about.html">关于我</a></li>
+					</ul>
+				</div><!-- /.navbar-collapse -->
+			</div><!-- /.container-fluid -->
+		</nav>
+
+		<div>
+			<h4 class="crumbs" id="crumbs" style="text-align:left;"></h4>
+		</div>
+
+		<div class="content">
+			<div class="artlist" id="cateArtWrap">
+				<!-- <div class='item row'>
+					<div class="col-md-2">
+						<img src="http://placehold.it/170x100/ff3333/ffffff?text=like%20you" alt="">
+					</div>
+					<div class="col-md-10">
+						<div class="date ">作者：admin 、 2019-12-08 、分类：前端</div>
+						<div class="title">这是介绍中vscode...</div>
+						<div class="intro">这是介绍中vscode这是介绍中vscode这是介绍中vscode...</div>
+					</div>
+					<hr>
+				</div> -->
+			</div>
+		</div>
+
+		<button type="button" class="btn  btn-block">查看更多</button>
+		<hr>
+
+		<div class="footer" style="text-align:center;font-size: 14px; color: #999;margin:10px 0;">
+			首页 | 主站 | GitHub | created at 2020/02/4 | Powered by 汪玮
+		</div>
+	</div>
+</body>
+<script src="./js/jquery.js"></script>
+<script src="./bootstrap/js/bootstrap.min.js"></script>
+<script src="./js/axios.js"></script>
+<script src="./utils/request.js"></script>
+<script src="./js/layer/layer.js"></script>
+<script src="./js/moment.js"></script>
+<script src="./js/nprogress.js"></script>
+
+<script>
+	//进度条
+	function startNProgress() {
+		NProgress.set(0.4); // 默认设置40% NProgress.set(0) 等价与 NProgress.start()
+		let interval = setInterval(function () {
+			NProgress.inc(); // 以小量递增
+		}, 200)
+
+		$(window).on('load', () => {
+			clearInterval(interval)
+			NProgress.done()
+		})
+	}
+	startNProgress();
+	//时间格式优化
+	function formatDate(date,format="YYYY-MM-DD HH:mm:ss"){
+             return moment(date).format(format)
+    }
+	// 获取所有的分类
+		// 获取所有的分类
+		async function loadCate(){
+		let data = await axios.get('/cate');
+		// 动态创建分类标签追加
+		let liHtml = ``;
+		data.forEach(({name,cat_id})=>{
+			liHtml += `<li><a href="/cate.html?cat_id=${cat_id}">${name}</a></li>`
+		})
+		$('#wrapCate').html(liHtml);
+		console.log(data)
+	}
+	loadCate()
+
+	 // 获取当前地址栏中的查询字符串
+	function searchParam(url) {
+		let search = location.search.slice(1) || '';
+		let params = {};
+		search && search.split('&').forEach(v => {
+			let [key, value] = v.split('=')
+			params[key] = decodeURIComponent(value)
+		})
+		return params;
+	}
+
+	let {cat_id} = searchParam(location.href)
+
+	
+	async function loadCatAet(){
+		let data = await axios.get('/getCateArticle/' + cat_id)
+		let html = ''
+		data.forEach(item => {
+			let {title,author,publish_data,cover,cat_name,art_id} = item;
+			publish_data = formatDate(publish_data,'YYYY-MM-DD')
+			html += `
+			<div class='item row'>
+					<div class="col-md-2">
+						<img src="${cover}" alt="">
+					</div>
+					<div class="col-md-10">
+						<div class="date ">作者：${author} 、 ${publish_data} 、分类：${cat_name}</div>
+						<div class="title"><a href='/detail.html?art_id=${art_id}'>${title}</a></div>
+					</div>
+					<hr>
+			</div>`;
+			$("#cateArtWrap").html(html)
+			let crumbs = `当前位置：<a href='/'>首页</a>  / ${cat_name}` ;
+			$("#crumbs").html(crumbs)
+		})
+	}
+	loadCatAet()
+
+</script>
+
+</html>
